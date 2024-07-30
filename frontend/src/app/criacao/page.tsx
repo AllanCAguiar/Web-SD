@@ -15,7 +15,6 @@ const CreateUser = () => {
     e.preventDefault();
 
     try {
-      console.log(JSON.stringify({ name, email }), selectedDb);
       const res = await fetch(`http://localhost:9000/api/users/${selectedDb}`, {
         method: "POST",
         headers: {
@@ -23,11 +22,9 @@ const CreateUser = () => {
         },
         body: JSON.stringify({ name, email }),
       });
-
       const result = await res.json();
       setMessage(result.message || "Usuário criado com sucesso");
     } catch (error) {
-      console.log(error);
       setMessage("Erro criando usuário");
     }
   };

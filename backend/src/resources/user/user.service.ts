@@ -72,24 +72,24 @@ export const createUser = async (name: string, email: string, db: number) => {
 
 export const deleteUser = async (email: string, db: number) => {
   let pool: mysql.Pool;
-  
+
   if (db === 1) {
     pool = mysqlPool1;
   } else if (db === 2) {
     pool = mysqlPool2;
   } else {
-    throw new Error('Invalid database selection');
+    throw new Error("Invalid database selection");
   }
 
-  const [rows] = await pool.query<mysql.RowDataPacket[]>('SELECT * FROM users WHERE email = ?', [email]);
-  let result
+  const [rows] = await pool.query<mysql.RowDataPacket[]>("SELECT * FROM users WHERE email = ?", [
+    email,
+  ]);
+  let result;
   if (rows.length !== 0) {
-    [result] = await pool.execute<mysql.ResultSetHeader>(
-      'DELETE FROM users WHERE email = ?', [email]
-    );
+    [result] = await pool.execute<mysql.ResultSetHeader>("DELETE FROM users WHERE email = ?", [
+      email,
+    ]);
   }
-
-  
 
   return result;
 };
