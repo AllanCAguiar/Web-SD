@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
-import { createPool } from "mysql2/promise";
+import mysql, { createPool } from "mysql2/promise";
 import dotenv from "dotenv";
+import { User } from "./user.types";
 
 dotenv.config();
 
@@ -30,44 +30,67 @@ export const listUsers = async (db: number) => {
 
 export const getUserByEmail = async (email: string) => {
   const [rows1]: [any[], any] = await mysqlPool1.query(
-    `SELECT * FROM users WHERE email = '${email}'`
+    `SELECT * FROM users WHERE email = '${email}'`,
   );
   const [rows2]: [any[], any] = await mysqlPool2.query(
-    `SELECT * FROM users WHERE email = '${email}'`
+    `SELECT * FROM users WHERE email = '${email}'`,
   );
   const existsInDb1 = rows1.length > 0;
   const existsInDb2 = rows2.length > 0;
-  if (!existsInDb1 && !existsInDb2) return "Usuario não existe em nenhum bd";
-  else if (existsInDb1 && !existsInDb2) return "Usuario não existe no bd2";
-  else if (!existsInDb1 && existsInDb2) return "Usuario não existe no bd1";
-  else return "Usuario existe em ambos bd";
+  if (!existsInDb1 && !existsInDb2) return "Usuário não existe em nenhum bd";
+  else if (existsInDb1 && !existsInDb2) return "Usuário existe apenas no bd1";
+  else if (!existsInDb1 && existsInDb2) return "Usuário existe apenas no bd2";
+  else return "Usuário existe em ambos bd";
 };
 
 export const createUser = async (name: string, email: string, db: number) => {
   let newUser;
-  if (db == 1) {
-    [newUser] = await mysqlPool1.query(
-      `INSERT INTO users (name, email) VALUES ('${name}', '${email}')`
-    );
-  } else if (db == 2) {
-    [newUser] = await mysqlPool2.query(
-      `INSERT INTO users (name, email) VALUES ('${name}', '${email}')`
-    );
+  let pool;
+
+  if (db === 1) {
+    pool = mysqlPool1;
+  } else if (db === 2) {
+    pool = mysqlPool2;
+  } else {
+    throw new Error("Invalid database selection");
   }
+
+  const [rows] = await pool.query<mysql.RowDataPacket[]>("SELECT * FROM users WHERE email = ?", [
+    email,
+  ]);
+  const existingUsers = rows as User[];
+  if (!existingUsers[0]) {
+    const [result] = await pool.execute<mysql.ResultSetHeader>(
+      "INSERT INTO users (name, email) VALUES (?, ?)",
+      [name, email],
+    );
+    newUser = { id: result.insertId, name, email };
+  }
+
   return newUser;
 };
 
 export const deleteUser = async (email: string, db: number) => {
-  let result;
-  if (db == 1) {
-    result = await mysqlPool1.query(
-      `DELETE FROM users WHERE email = '${email}'`
-    );
-  } else if (db == 2) {
-    result = await mysqlPool2.query(
-      `DELETE FROM users WHERE email = '${email}'`
+  let pool: mysql.Pool;
+  
+  if (db === 1) {
+    pool = mysqlPool1;
+  } else if (db === 2) {
+    pool = mysqlPool2;
+  } else {
+    throw new Error('Invalid database selection');
+  }
+
+  const [rows] = await pool.query<mysql.RowDataPacket[]>('SELECT * FROM users WHERE email = ?', [email]);
+  let result
+  if (rows.length !== 0) {
+    [result] = await pool.execute<mysql.ResultSetHeader>(
+      'DELETE FROM users WHERE email = ?', [email]
     );
   }
+
+  
+
   return result;
 };
 

@@ -1,10 +1,5 @@
 import { Request, Response } from "express";
-import {
-  createUser,
-  deleteUser,
-  getUserByEmail,
-  listUsers,
-} from "./user.service";
+import { createUser, deleteUser, getUserByEmail, listUsers } from "./user.service";
 
 export const index = async (req: Request, res: Response) => {
   const { db } = req.params;

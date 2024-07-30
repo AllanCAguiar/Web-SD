@@ -1,70 +1,50 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState } from "react";
 
 const ManageUser = () => {
-  const [email, setEmail] = useState('');
-  const [db, setDb] = useState<number>(1);
-  const [message, setMessage] = useState('');
+  const [email, setEmail] = useState("");
+  const [selectedDb, setSelectedDb] = useState<string | null>("1");
+  const [message, setMessage] = useState("");
+
+  const handleRadioChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedDb(event.target.value);
+  };
 
   const handleCheck = async () => {
     try {
       const res = await fetch(`http://localhost:9000/api/users/${email}`);
-        console.log(res)
       if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+        throw new Error(`Erro interno! status: ${res.status}`);
       }
-  
+
       const result = await res.json();
       setMessage(result);
     } catch (error) {
       console.error(error);
-      setMessage('Error checking user');
-    }
-  };
-  
-
-  const handleDelete = async () => {
-    try {
-      const res = await fetch(`http://localhost:9000/api/users/${db}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const result = await res.json();
-      setMessage(result.message || 'User removed successfully');
-    } catch (error) {
-        console.log(error)
-      setMessage('Error removing user');
+      setMessage("Erro verificando usuário");
     }
   };
 
   return (
-    <div>
-      <h1>Manage User</h1>
-      <div>
-        <label>Email:</label>
-        <input 
-          type="email" 
-          value={email} 
-          onChange={(e) => setEmail(e.target.value)} 
-          required 
+    <div className="container mt-4">
+      <h1 className="mb-4">Verificação de Usuário</h1>
+      <div className="form-group">
+        <label htmlFor="email">Email:</label>
+        <input
+          id="email"
+          type="email"
+          className="form-control"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
         />
       </div>
-      <div>
-        <label>Database (1 or 2):</label>
-        <input 
-          type="number" 
-          value={db} 
-          onChange={(e) => setDb(Number(e.target.value))} 
-          required 
-        />
+      <div className="mt-3">
+        <button type="button" className="btn btn-info mr-2" onClick={handleCheck}>
+          Verificar Usuário
+        </button>
       </div>
-      <button onClick={handleCheck}>Check User</button>
-      <button onClick={handleDelete}>Delete User</button>
-      {message && <p>{message}</p>}
+      {message && <p className="mt-3">{message}</p>}
     </div>
   );
 };
